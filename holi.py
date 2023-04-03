@@ -20,4 +20,6 @@ soup = BeautifulSoup(page, 'html.parser')
 
 for i in soup.find_all("tr"):
     for k in i.find_all("td"):
-        print(k.text)
+        #print(k.text)
+        strng = str(k.text).split()
+        print("This is the string:",strng)
