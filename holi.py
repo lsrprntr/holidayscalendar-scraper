@@ -46,3 +46,4 @@ c.events
 
 with open('my.ics', 'w') as f:
     f.writelines(c.serialize_iter())
+    f.writelines(c.serialize_iter())
