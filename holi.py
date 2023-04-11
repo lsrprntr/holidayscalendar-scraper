@@ -1,8 +1,11 @@
 import urllib.request, urllib.parse, urllib.error
 from bs4 import BeautifulSoup
+from datetime import datetime
+from ics import Calendar, Event
 
-fyear = str(input("What year?: ____"))
-link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
+#input string
+#fyear = str(input("What year?: ____"))
+#link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 
 #page request html vomit
 page = urllib.request.urlopen('https://www.holidayscalendar.com/categories/international-2023/')
