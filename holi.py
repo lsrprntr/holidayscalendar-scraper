@@ -1,4 +1,6 @@
 import urllib.request, urllib.parse, urllib.error
+import collections
+collections.Callable = collections.abc.Callable
 from bs4 import BeautifulSoup
 from datetime import datetime
 from ics import Calendar, Event
@@ -12,7 +14,7 @@ page = urllib.request.urlopen('https://www.holidayscalendar.com/categories/inter
 #print(page.read())
 
 
-soup = BeautifulSoup(page, 'html.parser')
+soup = BeautifulSoup(page,'html.parser')
 
 #print(soup)
 
@@ -20,9 +22,27 @@ soup = BeautifulSoup(page, 'html.parser')
 #tabel = soup.find('table')
 #print(tabel)
 
+dates = list()
+descriptions = list()
 
 for i in soup.find_all("tr"):
     for k in i.find_all("td"):
-        #print(k.text)
         strng = str(k.text).split()
-        print("This is the string:",strng)
+        if strng is None:
+            continue
+        strng = " ".join(strng)
+        dates.append(strng)
+
+print(dates)
+
+
+
+c = Calendar()
+e = Event()
+e.name = "My cool event"
+e.begin = '2014-01-01 00:00:00'
+c.events.add(e)
+c.events
+
+with open('my.ics', 'w') as f:
+    f.writelines(c.serialize_iter())
