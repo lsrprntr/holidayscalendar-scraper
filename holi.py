@@ -42,16 +42,6 @@ for a,b in zip(dates,descriptions):
     print(a,b)
         
 
-    #print("this is the",month,"this is the",date,"this is the",day)
-    
-        #strng = str(k.text).split()
-        #if strng is None:
-        #    continue
-        #strng = " ".join(strng)
-        #dates.append(strng)
-
-
-
 
 #ics append
 """
