@@ -54,14 +54,4 @@ with open('export.ics', 'w') as f:
         #write to file
         f.writelines(c.serialize_iter())
 
-
-    
-
-"""
-
-
-with open('my.ics', 'w') as f:
-    f.writelines(c.serialize_iter())
-    f.writelines(c.serialize_iter())
-
-"""
+print("export.ics created")
