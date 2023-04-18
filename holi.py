@@ -10,6 +10,7 @@ fyear = str(input("What year?: "))
 if fyear:
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 else:
+    fyear="2023"
     link = 'https://www.holidayscalendar.com/categories/international-2023/'
 
 #html page reuest and read
@@ -38,21 +39,23 @@ for i in soup.find_all("tr"):
         descriptions.append(category)
 
 #zip iterator for days and descriptions; also converting days into ISO format for ics module
+
 for a,b in zip(dates,descriptions):
-    for x in a:
-        continue
+    date_time_str = fyear+" "+" ".join(a)
+    date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
+    c = Calendar()
+    e = Event()
+    e.name = b
+    e.begin = date_time_obj
+    c.events.add(e)
+    
 
         
-
+#f"{fyear}-{month}-"
 
 #ics append
 """
-c = Calendar()
-e = Event()
-e.name = "My cool event"
-e.begin = '2014-01-01 00:00:00'
-c.events.add(e)
-c.events
+
 
 with open('my.ics', 'w') as f:
     f.writelines(c.serialize_iter())
