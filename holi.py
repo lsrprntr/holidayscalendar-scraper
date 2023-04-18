@@ -24,26 +24,24 @@ except:
 soup = BeautifulSoup(page,'html.parser')
 #print(soup)
 
-
-#finding table tag
-#tabel = soup.find('table')
-#print(tabel)
-
 dates = list()
 descriptions = list()
 
+#finding the table
 for i in soup.find_all("tr"):
-    for k in i.find_all("td"):
-        strng = str(k.text).split()
-        if strng is None:
-            continue
-        strng = " ".join(strng)
-        dates.append(strng)
+    for k in i.find_all("a"):
+        print(k)
+        #strng = str(k.text).split()
+        #if strng is None:
+        #    continue
+        #strng = " ".join(strng)
+        #dates.append(strng)
 
 print(dates)
 
 
-
+#ics append
+"""
 c = Calendar()
 e = Event()
 e.name = "My cool event"
@@ -54,3 +52,5 @@ c.events
 with open('my.ics', 'w') as f:
     f.writelines(c.serialize_iter())
     f.writelines(c.serialize_iter())
+
+"""
