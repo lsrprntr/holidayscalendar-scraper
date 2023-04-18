@@ -1,8 +1,8 @@
 import urllib.request, urllib.parse, urllib.error
-import collections
-collections.Callable = collections.abc.Callable
+#import collections
+#collections.Callable = collections.abc.Callable
 from bs4 import BeautifulSoup
-from datetime import datetime
+import datetime
 from ics import Calendar, Event
 
 #year string input with default to 2023 if no input
@@ -39,7 +39,8 @@ for i in soup.find_all("tr"):
 
 #zip iterator for days and descriptions; also converting days into ISO format for ics module
 for a,b in zip(dates,descriptions):
-    print(a,b)
+    for x in a:
+
         
 
 
