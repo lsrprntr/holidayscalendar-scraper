@@ -10,9 +10,12 @@ from ics import Calendar, Event
 #link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 
 #page request html vomit
-page = urllib.request.urlopen('https://www.holidayscalendar.com/categories/international-2023/')
+try:
+    page = urllib.request.urlopen('https://www.holidayscalendar.com/categories/international-2023/')
 #print(page.read())
-
+except:
+    fhand = open("demo.html","r")
+    page = f.read()
 
 soup = BeautifulSoup(page,'html.parser')
 
