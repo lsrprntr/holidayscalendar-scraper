@@ -22,22 +22,35 @@ except:
 
 #soup handle, the ladle
 soup = BeautifulSoup(page,'html.parser')
-#print(soup)
+
 
 dates = list()
 descriptions = list()
 
-#finding the table
+#finding the table and appending to list
 for i in soup.find_all("tr"):
-    for k in i.find_all("a"):
-        print(k)
+    for d in i.find_all("td",class_="wphc-tbl-date"):
+        date = (d.text).split() #date list MMM/DD/DAY
+        dates.append(date)
+    for n in i.find_all("td",class_="wphc-tbl-name d-flex"):
+        category = n.find("a").text
+        #country = n.find_all("span") #for categories and countries
+        descriptions.append(category)
+
+#zip iterator for days and descriptions; also converting days into ISO format for ics module
+for a,b in zip(dates,descriptions):
+    print(a,b)
+        
+
+    #print("this is the",month,"this is the",date,"this is the",day)
+    
         #strng = str(k.text).split()
         #if strng is None:
         #    continue
         #strng = " ".join(strng)
         #dates.append(strng)
 
-print(dates)
+
 
 
 #ics append
