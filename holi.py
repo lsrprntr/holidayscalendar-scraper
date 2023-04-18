@@ -5,23 +5,27 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from ics import Calendar, Event
 
-#input string
-#fyear = str(input("What year?: ____"))
-#link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
+#year string input with default to 2023 if no input
+fyear = str(input("What year?: ")) 
+if fyear:
+    link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
+else:
+    link = 'https://www.holidayscalendar.com/categories/international-2023/'
 
-#page request html vomit
+#html page reuest and read
 try:
-    page = urllib.request.urlopen('https://www.holidayscalendar.com/categories/international-2023/')
-#print(page.read())
+    page = urllib.request.urlopen(link)
+    #print(page.read())
 except:
     fhand = open("demo.html","r")
     page = fhand.read()
 
+#soup handle, the ladle
 soup = BeautifulSoup(page,'html.parser')
-
 #print(soup)
 
-#find table
+
+#finding table tag
 #tabel = soup.find('table')
 #print(tabel)
 
