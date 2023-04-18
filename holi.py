@@ -1,6 +1,6 @@
 import urllib.request, urllib.parse, urllib.error
-#import collections
-#collections.Callable = collections.abc.Callable
+import collections
+collections.Callable = collections.abc.Callable #fixes bs4 exception
 from bs4 import BeautifulSoup
 import datetime
 from ics import Calendar, Event
@@ -40,6 +40,7 @@ for i in soup.find_all("tr"):
 #zip iterator for days and descriptions; also converting days into ISO format for ics module
 for a,b in zip(dates,descriptions):
     for x in a:
+        continue
 
         
 
