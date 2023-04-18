@@ -1,148 +1,166 @@
-import copy
-import warnings
-from typing import Dict, Iterable, Optional, Set, Union
+from datetime import tzinfo
+from typing import ClassVar, Iterable, Iterator, List, Optional, Union, overload
 
-from six import text_type
+import attr
+from attr.validators import instance_of
 
-from .component import Component
-from .event import Event
-from ics.grammar.parse import Container, calendar_string_to_containers
-from .timeline import Timeline
-from .todo import Todo
-from ics.parsers.icalendar_parser import CalendarParser
-from ics.serializers.icalendar_serializer import CalendarSerializer
+from ics.component import Component
+from ics.contentline import Container, lines_to_containers, string_to_containers
+from ics.event import Event
+from ics.timeline import Timeline
+from ics.timespan import Normalization, NormalizationAction
+from ics.todo import Todo
 
 
-class Calendar(Component):
+@attr.s
+class CalendarAttrs(Component):
+    version: str = attr.ib(
+        validator=instance_of(str), metadata={"ics_priority": 1000}
+    )  # default set by Calendar.DEFAULT_VERSION
+    prodid: str = attr.ib(
+        validator=instance_of(str), metadata={"ics_priority": 900}
+    )  # default set by Calendar.DEFAULT_PRODID
+    scale: Optional[str] = attr.ib(default=None, metadata={"ics_priority": 800})
+    method: Optional[str] = attr.ib(default=None, metadata={"ics_priority": 700})
+    # CalendarTimezoneConverter has priority 600
+
+    events: List[Event] = attr.ib(
+        factory=list, converter=list, metadata={"ics_priority": -100}
+    )
+    todos: List[Todo] = attr.ib(
+        factory=list, converter=list, metadata={"ics_priority": -200}
+    )
+
+
+class Calendar(CalendarAttrs):
     """
-    Represents an unique rfc5545 iCalendar.
+    Represents an unique RFC 5545 iCalendar.
 
     Attributes:
 
-        events: a set of Event contained in the Calendar
-        todos: a set of Todo contained in the Calendar
-        timeline: a Timeline instance linked to this Calendar
+        events: a list of `Event` contained in the Calendar
+        todos: a list of `Todo` contained in the Calendar
+        timeline: a `Timeline` instance for iterating this Calendar in chronological order
 
     """
 
-    class Meta:
-        name = 'VCALENDAR'
-        parser = CalendarParser
-        serializer = CalendarSerializer
+    NAME = "VCALENDAR"
+    DEFAULT_VERSION: ClassVar[str] = "2.0"
+    DEFAULT_PRODID: ClassVar[str] = "ics.py 0.8.0-dev0 - http://git.io/lLljaA"
 
     def __init__(
         self,
-        imports: Union[str, Container] = None,
-        events: Iterable[Event] = None,
-        todos: Iterable[Todo] = None,
-        creator: str = None
+        imports: Union[str, Container, None] = None,
+        events: Optional[Iterable[Event]] = None,
+        todos: Optional[Iterable[Todo]] = None,
+        creator: str = None,
+        **kwargs,
     ):
-        """Instantiates a new Calendar.
+        """Initializes a new Calendar.
 
         Args:
             imports (**str**): data to be imported into the Calendar,
-            events (**Set[Event]**): Events to be added to the calendar
-            todos (Set[Todo]): Todos to be added to the calendar
-            creator (string): uid of the creator program.
-
-        If ``imports`` is specified, every other argument will be ignored.
+            events (**Iterable[Event]**): `Event` to be added to the calendar
+            todos (**Iterable[Todo]**): `Todo` to be added to the calendar
+            creator (**string**): uid of the creator program.
         """
-
-        self._timezones: Dict = {} # FIXME mypy
-        self.events: Set[Event] = set()
-        self.todos: Set[Todo] = set()
-        self.extra = Container(name='VCALENDAR')
-        self.scale = None
-        self.method = None
-
-        self.timeline = Timeline(self)
+        if events is None:
+            events = tuple()
+        if todos is None:
+            todos = tuple()
+        kwargs.setdefault("version", self.DEFAULT_VERSION)
+        kwargs.setdefault(
+            "prodid", creator if creator is not None else self.DEFAULT_PRODID
+        )
+        super().__init__(events=events, todos=todos, **kwargs)  # type: ignore[arg-type]
+        self.timeline = Timeline(self, None)
 
         if imports is not None:
             if isinstance(imports, Container):
-                self._populate(imports)
+                self.populate(imports)
             else:
-                containers = calendar_string_to_containers(imports)
-                if len(containers) != 1:
-                    raise NotImplementedError(
-                        'Multiple calendars in one file are not supported by this method. Use ics.Calendar.parse_multiple()')
+                if isinstance(imports, str):
+                    containers = iter(string_to_containers(imports))
+                else:
+                    containers = iter(lines_to_containers(imports))
+                try:
+                    container = next(containers)
+                    if not isinstance(container, Container):
+                        raise ValueError(f"can't populate from {type(container)}")
+                    self.populate(container)
+                except StopIteration:
+                    raise ValueError("string didn't contain any ics data")
+                try:
+                    next(containers)
+                    raise ValueError(
+                        "Multiple calendars in one file are not supported by this method."
+                        "Use ics.Calendar.parse_multiple()"
+                    )
+                except StopIteration:
+                    pass
 
-                self._populate(containers[0])  # Use first calendar
-        else:
-            if events is not None:
-                self.events.update(set(events))
-            if todos is not None:
-                self.todos.update(set(todos))
-            self._creator = creator
+    @property
+    def creator(self) -> str:
+        return self.prodid
+
+    @creator.setter
+    def creator(self, value: str):
+        self.prodid = value
 
     @classmethod
     def parse_multiple(cls, string):
-        """"
+        """ "
         Parses an input string that may contain mutiple calendars
         and retruns a list of :class:`ics.event.Calendar`
         """
-        containers = calendar_string_to_containers(string)
+        containers = string_to_containers(string)
         return [cls(imports=c) for c in containers]
 
-    def __repr__(self) -> str:
-        return "<Calendar with {} event{} and {} todo{}>" \
-            .format(len(self.events),
-                    "s" if len(self.events) > 1 else "",
-                    len(self.todos),
-                    "s" if len(self.todos) > 1 else "")
+    @overload
+    def normalize(self, normalization: Normalization):
+        ...
 
-    def __iter__(self) -> Iterable[str]:
+    @overload
+    def normalize(
+        self,
+        value: tzinfo,
+        normalize_floating: NormalizationAction,
+        normalize_with_tz: NormalizationAction,
+    ):
+        ...
+
+    def normalize(self, normalization, *args, **kwargs):
+        if isinstance(normalization, Normalization):
+            if args or kwargs:
+                raise ValueError(
+                    "can't pass args or kwargs when a complete Normalization is given"
+                )
+        else:
+            normalization = Normalization(normalization, *args, **kwargs)
+        self.events = [
+            e if e.all_day else normalization.normalize(e) for e in self.events
+        ]
+        self.todos = [
+            e if e.all_day else normalization.normalize(e) for e in self.todos
+        ]
+
+    def __str__(self) -> str:
+        return "<Calendar with {} event{} and {} todo{}>".format(
+            len(self.events),
+            "" if len(self.events) == 1 else "s",
+            len(self.todos),
+            "" if len(self.todos) == 1 else "s",
+        )
+
+    def __iter__(self) -> Iterator[str]:
         """Returns:
-        iterable: an iterable version of seralize(), line per line
+        iterable: an iterable version of __str__, line per line
         (with line-endings).
 
         Example:
             Can be used to write calendar to a file:
 
-            >>> c = Calendar(); c.events.add(Event(name="My cool event"))
+            >>> c = Calendar(); c.events.append(Event(summary="My cool event"))
             >>> open('my.ics', 'w').writelines(c)
         """
-        warnings.warn(
-            "Using Calendar as Iterable is deprecated and will be removed in version 0.8. "
-            "Use the explicit calendar.serialize_iter() instead.", DeprecationWarning)
-        yield from self.serialize_iter()
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Calendar):
-            raise NotImplementedError
-        for attr in ('extra', 'scale', 'method', 'creator'):
-            if self.__getattribute__(attr) != other.__getattribute__(attr):
-                return False
-
-        return (self.events == other.events) and (self.todos == other.todos)
-
-    def __ne__(self, other: object) -> bool:
-        return not self.__eq__(other)
-
-    @property
-    def creator(self) -> Optional[str]:
-        """Get or set the calendar's creator.
-
-        |  Will return a string.
-        |  May be set to a string.
-        |  Creator is the PRODID iCalendar property.
-        |  It uniquely identifies the program that created the calendar.
-        """
-        return self._creator
-
-    @creator.setter
-    def creator(self, value: Optional[str]) -> None:
-        if not isinstance(value, text_type):
-            raise ValueError('Event.creator must be unicode data not {}'.format(type(value)))
-        self._creator = value
-
-    def clone(self):
-        """
-        Returns:
-            Calendar: an exact deep copy of self
-        """
-        clone = copy.copy(self)
-        clone.extra = clone.extra.clone()
-        clone.events = copy.copy(self.events)
-        clone.todos = copy.copy(self.todos)
-        clone._timezones = copy.copy(self._timezones)
-        return clone
+        return iter(self.serialize().splitlines(keepends=True))

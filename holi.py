@@ -6,7 +6,7 @@ import datetime
 from ics import Calendar, Event
 
 #year string input with default to 2023 if no input
-fyear = str(input("What year?: ")) 
+fyear = str(input("What year?: "))
 if fyear:
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 else:
@@ -46,12 +46,12 @@ with open('export.ics', 'w') as f:
         date_time_str = fyear+" "+" ".join(a)
         date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
 
-        
+
         e.name = b
         e.begin = date_time_obj
         c.events.add(e)
         c.events
         #write to file
-        f.writelines(c.serialize_iter())
+        f.writelines(c)
 
 print("export.ics created")

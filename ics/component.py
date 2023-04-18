@@ -1,89 +1,99 @@
-import warnings
-from collections import namedtuple
-from typing import Any, Dict, Tuple, Iterable
+from typing import ClassVar, Dict, List, Optional, Type, TypeVar, Union
 
-from ics.grammar.parse import Container
-from .utils import get_lines
-from .serializers.serializer import Serializer
-from .parsers.parser import Parser
+import attr
+from attr.validators import instance_of
 
-Extractor = namedtuple(
-    'Extractor',
-    ['function', 'type', 'required', 'multiple', 'default']
-)
+from ics.contentline import Container
+from ics.types import ContextDict, ExtraParams, RuntimeAttrValidation
+
+ComponentType = TypeVar("ComponentType", bound="Component")
+ComponentExtraParams = Dict[str, Union[ExtraParams, List[ExtraParams]]]
 
 
-class Component(object):
+@attr.s
+class Component(RuntimeAttrValidation):
+    NAME: ClassVar[str] = "ABSTRACT-COMPONENT"
+    SUBTYPES: ClassVar[List[Type["Component"]]] = []
 
-    class Meta:
-        name = "ABSTRACT"
-        parser = Parser
-        serializer = Serializer
+    extra: Container = attr.ib(
+        init=False, validator=instance_of(Container), metadata={"ics_ignore": True}
+    )
+    extra_params: ComponentExtraParams = attr.ib(
+        init=False,
+        factory=dict,
+        validator=instance_of(dict),
+        metadata={"ics_ignore": True},
+    )
 
-    _classmethod_args: Tuple
-    _classmethod_kwargs: Dict
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
+        object.__setattr__(self, "extra", Container(self.NAME))
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        Component.SUBTYPES.append(cls)
 
     @classmethod
-    def _from_container(cls, container: Container, *args: Any, **kwargs: Any):
-        k = cls()
-        k._classmethod_args = args
-        k._classmethod_kwargs = kwargs
-        k._populate(container)
+    def from_container(
+        cls: Type[ComponentType],
+        container: Container,
+        context: Optional[ContextDict] = None,
+    ) -> ComponentType:
+        from ics import initialize_converters
 
-        return k
+        initialize_converters()
+        from ics.converter.component import ComponentMeta
 
-    def _populate(self, container: Container) -> None:
-        if container.name != self.Meta.name:
-            raise ValueError("container isn't an {}".format(self.Meta.name))
+        return ComponentMeta.BY_TYPE[cls].load_instance(container, context)
 
-        for line_name, (parser, options) in self.Meta.parser.get_parsers().items():
-            lines = get_lines(container, line_name)
-            if not lines and options.required:
-                if options.default:
-                    lines = options.default
-                    default_str = "\\n".join(map(str, options.default))
-                    message = ("The %s property was not found and is required by the RFC." +
-                        " A default value of \"%s\" has been used instead") % (line_name, default_str)
-                    warnings.warn(message)
-                else:
-                    raise ValueError(
-                        'A {} must have at least one {}'
-                        .format(container.name, line_name))
+    def populate(self, container: Container, context: Optional[ContextDict] = None):
+        from ics import initialize_converters
 
-            if not options.multiple and len(lines) > 1:
-                raise ValueError(
-                    'A {} must have at most one {}'
-                    .format(container.name, line_name))
+        initialize_converters()
+        from ics.converter.component import ComponentMeta
 
-            if options.multiple:
-                parser(self, lines)  # Send a list or empty list
-            else:
-                if len(lines) == 1:
-                    parser(self, lines[0])  # Send the element
-                else:
-                    parser(self, None)  # Send None
+        ComponentMeta.BY_TYPE[type(self)].populate_instance(self, container, context)
 
-        self.extra = container  # Store unused lines
+    def to_container(self, context: Optional[ContextDict] = None) -> Container:
+        from ics import initialize_converters
 
-    def serialize(self) -> str:
-        """Returns the component in an iCalendar format."""
-        container = self.extra.clone()
-        for output in self.Meta.serializer.get_serializers():
-            output(self, container)
-        return str(container)
+        initialize_converters()
+        from ics.converter.component import ComponentMeta
 
-    def serialize_iter(self) -> Iterable[str]:
-        """Returns the component in an iCalendar format.
+        return ComponentMeta.BY_TYPE[type(self)].serialize_toplevel(self, context)
 
-        This returns an Iterable of multiple string chunks which should be concatenated to form the actual ics representation.
-        Note that individual items of the returned Iterable not necessarily correspond to individual lines,
-        linebreaks are contained at the right places within the items."""
-        return self.serialize().splitlines(keepends=True)
+    def serialize(self, context: Optional[ContextDict] = None) -> str:
+        """Creates a serialized string fit for file write."""
 
-    def __str__(self) -> str:
-        """Starting from version 0.9, returns a short description of the Component."""
-        warnings.warn(
-            "Behaviour of str(Component) will change in version 0.9 to only return a short description, NOT the ics representation. "
-            "Use the explicit Component.serialize() to get the ics representation.", FutureWarning
-        )
-        return self.serialize()
+        return self.to_container(context).serialize()
+
+    def strip_extras(
+        self,
+        all_extras=False,
+        extra_properties=None,
+        extra_params=None,
+        property_merging=None,
+    ):
+        if extra_properties is None:
+            extra_properties = all_extras
+        if extra_params is None:
+            extra_params = all_extras
+        if property_merging is None:
+            property_merging = all_extras
+        if not any([extra_properties, extra_params, property_merging]):
+            raise ValueError("need to strip at least one thing")
+        if extra_properties:
+            self.extra.clear()
+        if extra_params:
+            self.extra_params.clear()
+        elif property_merging:
+            for val in self.extra_params.values():
+                if not isinstance(val, list):
+                    continue
+                for v in val:
+                    v.pop("__merge_next", None)
+
+    def clone(self):
+        """Returns an exact (shallow) copy of self"""
+        # TODO deep copies?
+        return attr.evolve(self)

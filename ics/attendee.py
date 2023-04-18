@@ -1,92 +1,114 @@
-import warnings
-from typing import Dict, List
+from typing import Any, Dict, Generic, Iterable, List, TypeVar
 
-from ics.grammar.parse import ContentLine
-from ics.parsers.attendee_parser import AttendeeParser, PersonParser
-from ics.serializers.attendee_serializer import AttendeeSerializer, PersonSerializer
-from ics.utils import escape_string, unescape_string
+import attr
+
+from ics.utils import check_is_instance
+from ics.valuetype.base import ValueConverter
+from ics.valuetype.generic import BooleanConverter, URIConverter
+from ics.valuetype.text import RawTextConverter
+
+T = TypeVar("T")
 
 
-class Person(object):
-    class Meta:
-        name = "ABSTRACT-PERSON"
-        parser = PersonParser
-        serializer = PersonSerializer
+@attr.s(frozen=True)
+class PersonProperty(Generic[T]):
+    name: str = attr.ib()
+    converter: ValueConverter[T] = attr.ib(default=RawTextConverter)
+    default: Any = attr.ib(default=None)
 
-    def __init__(self, email: str, common_name: str = None, dir: str = None, sent_by: str = None) -> None:
-        self.email = email
-        self.common_name = common_name or email
-        self.dir = dir
-        self.sent_by = sent_by
-        self.extra: Dict[str, List[str]] = {}
+    def __get__(self, instance: "Person", owner) -> T:
+        if self.name not in instance.extra:
+            return self.default
+        value = instance.extra[self.name]
+        if len(value) == 0:
+            return self.default
+        elif len(value) == 1:
+            return self.converter.parse(value[0])
+        else:
+            raise ValueError(
+                f"Expected at most one value for property {self.name!r}, got {value!r}!"
+            )
 
-    @classmethod
-    def parse(cls, line: ContentLine) -> "Person":
-        email = unescape_string(line.value)
-        if email.lower().startswith("mailto:"):
-            email = email[len("mailto:"):]
-        val = cls(email)
-        val.populate(line)
-        return val
+    def __set__(self, instance: "Person", value: T):
+        instance.extra[self.name] = [self.converter.serialize(value)]
 
-    def populate(self, line: ContentLine) -> None:
-        if line.name != self.Meta.name:
-            raise ValueError("line isn't an {}".format(self.Meta.name))
+    def __delete__(self, instance: "Person"):
+        instance.extra.pop(self.name, None)
 
-        params = dict(line.params)
-        for param_name, (parser, options) in self.Meta.parser.get_parsers().items():
-            values = params.pop(param_name, [])
-            if not values and options.required:
-                if options.default:
-                    values = options.default
-                    default_str = "\\n".join(map(str, options.default))
-                    message = ("The %s property was not found and is required by the RFC." +
-                               " A default value of \"%s\" has been used instead") % (param_name, default_str)
-                    warnings.warn(message)
-                else:
-                    raise ValueError('A {} must have at least one {}'.format(line.name, param_name))
 
-            if not options.multiple and len(values) > 1:
-                raise ValueError('A {} must have at most one {}'.format(line.name, param_name))
+@attr.s(frozen=True)
+class PersonMultiProperty(Generic[T]):
+    name: str = attr.ib()
+    converter: ValueConverter[T] = attr.ib(default=RawTextConverter)
+    default: Any = attr.ib(default=None)
 
-            if options.multiple:
-                parser(self, values)  # Send a list or empty list
-            else:
-                if len(values) == 1:
-                    parser(self, values[0])  # Send the element
-                else:
-                    parser(self, None)  # Send None
+    def __get__(self, instance: "Person", owner) -> List[T]:
+        if self.name not in instance.extra:
+            return self.default
+        return [self.converter.parse(v) for v in instance.extra[self.name]]
 
-        self.extra = params  # Store unused lines
+    def __set__(self, instance: "Person", value: Iterable[T]):
+        instance.extra[self.name] = [self.converter.serialize(v) for v in value]
 
-    def serialize(self) -> ContentLine:
-        line = ContentLine(self.Meta.name, params=self.extra, value=escape_string('mailto:%s' % self.email))
-        for output in self.Meta.serializer.get_serializers():
-            output(self, line)
-        return line
+    def __delete__(self, instance: "Person"):
+        instance.extra.pop(self.name, None)
 
-    def __str__(self) -> str:
-        """Returns the attendee in an ContentLine format."""
-        return str(self.serialize())
+
+@attr.s
+class PersonAttrs:
+    email: str = attr.ib()
+    extra: Dict[str, List[str]] = attr.ib(factory=dict)
+
+
+class Person(PersonAttrs):
+    """Abstract class for Attendee and Organizer."""
+
+    NAME = "ABSTRACT-PERSON"
+
+    def __init__(self, email, extra=None, **kwargs):
+        if extra is None:
+            extra = dict()
+        else:
+            check_is_instance("extra", extra, dict)
+        super().__init__(email, extra)
+        for key, val in kwargs.items():
+            setattr(self, key, val)
+
+    sent_by = PersonProperty("SENT-BY", URIConverter)
+    common_name = PersonProperty[str]("CN")
+    directory = PersonProperty("DIR", URIConverter)
 
 
 class Organizer(Person):
-    class Meta:
-        name = 'ORGANIZER'
-        parser = PersonParser
-        serializer = PersonSerializer
+    """Organizer of an event or todo."""
+
+    NAME = "ORGANIZER"
 
 
 class Attendee(Person):
-    def __init__(self, email: str, common_name: str = None, dir: str = None, sent_by: str = None,
-                 rsvp: bool = None, role: str = None, partstat: str = None, cutype: str = None) -> None:
-        super().__init__(email, common_name, dir, sent_by)
-        self.rsvp = rsvp
-        self.role = role
-        self.partstat = partstat
-        self.cutype = cutype
+    """Attendee of an event or todo.
 
-    class Meta:
-        name = 'ATTENDEE'
-        parser = AttendeeParser
-        serializer = AttendeeSerializer
+    Possible values according to iCalendar standard, first value is default:
+        user_type = INDIVIDUAL | GROUP | RESOURCE | ROOM | UNKNOWN
+        member = Person
+        role = REQ-PARTICIPANT | CHAIR | OPT-PARTICIPANT | NON-PARTICIPANT
+        rsvp = False | True
+        delegated_to = Person
+        delegated_from = Person
+
+        Depending on the Component, different status are possible.
+        Event:
+        status = NEEDS-ACTION | ACCEPTED | DECLINED | TENTATIVE | DELEGATED
+        Todo:
+        status = NEEDS-ACTION | ACCEPTED | DECLINED | TENTATIVE | DELEGATED | COMPLETED | IN-PROCESS
+    """
+
+    NAME = "ATTENDEE"
+
+    user_type = PersonProperty[str]("CUTYPE", default="INDIVIDUAL")
+    member = PersonMultiProperty("MEMBER", converter=URIConverter)
+    role = PersonProperty[str]("ROLE", default="REQ-PARTICIPANT")
+    status = PersonProperty[str]("PARTSTAT", default="NEEDS-ACTION")
+    rsvp = PersonProperty("RSVP", converter=BooleanConverter, default=False)
+    delegated_to = PersonMultiProperty("DELEGATED-TO", converter=URIConverter)
+    delegated_from = PersonMultiProperty("DELEGATED-FROM", converter=URIConverter)
