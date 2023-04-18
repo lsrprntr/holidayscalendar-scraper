@@ -1,8 +1,8 @@
 import urllib.request, urllib.parse, urllib.error
 import collections
-collections.Callable = collections.abc.Callable
+collections.Callable = collections.abc.Callable #fixes bs4 exception
 from bs4 import BeautifulSoup
-from datetime import datetime
+import datetime
 from ics import Calendar, Event
 
 #year string input with default to 2023 if no input
@@ -10,6 +10,7 @@ fyear = str(input("What year?: "))
 if fyear:
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 else:
+    fyear="2023"
     link = 'https://www.holidayscalendar.com/categories/international-2023/'
 
 #html page reuest and read
@@ -38,32 +39,19 @@ for i in soup.find_all("tr"):
         descriptions.append(category)
 
 #zip iterator for days and descriptions; also converting days into ISO format for ics module
-for a,b in zip(dates,descriptions):
-    print(a,b)
+with open('export.ics', 'w') as f:
+    c = Calendar()
+    e = Event()
+    for a,b in zip(dates,descriptions):
+        date_time_str = fyear+" "+" ".join(a)
+        date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
+
         
+        e.name = b
+        e.begin = date_time_obj
+        c.events.add(e)
+        c.events
+        #write to file
+        f.writelines(c.serialize_iter())
 
-    #print("this is the",month,"this is the",date,"this is the",day)
-    
-        #strng = str(k.text).split()
-        #if strng is None:
-        #    continue
-        #strng = " ".join(strng)
-        #dates.append(strng)
-
-
-
-
-#ics append
-"""
-c = Calendar()
-e = Event()
-e.name = "My cool event"
-e.begin = '2014-01-01 00:00:00'
-c.events.add(e)
-c.events
-
-with open('my.ics', 'w') as f:
-    f.writelines(c.serialize_iter())
-    f.writelines(c.serialize_iter())
-
-"""
+print("export.ics created")
