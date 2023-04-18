@@ -39,21 +39,24 @@ for i in soup.find_all("tr"):
         descriptions.append(category)
 
 #zip iterator for days and descriptions; also converting days into ISO format for ics module
-
-for a,b in zip(dates,descriptions):
-    date_time_str = fyear+" "+" ".join(a)
-    date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
+with open('my.ics', 'w') as f:
     c = Calendar()
     e = Event()
-    e.name = b
-    e.begin = date_time_obj
-    c.events.add(e)
-    
+    for a,b in zip(dates,descriptions):
+        date_time_str = fyear+" "+" ".join(a)
+        date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
 
         
-#f"{fyear}-{month}-"
+        e.name = b
+        e.begin = date_time_obj
+        c.events.add(e)
+        c.events
+        #write to file
+        f.writelines(c.serialize_iter())
 
-#ics append
+
+    
+
 """
 
 
