@@ -15,7 +15,7 @@ try:
 #print(page.read())
 except:
     fhand = open("demo.html","r")
-    page = f.read()
+    page = fhand.read()
 
 soup = BeautifulSoup(page,'html.parser')
 
