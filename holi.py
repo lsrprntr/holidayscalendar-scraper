@@ -39,7 +39,7 @@ for i in soup.find_all("tr"):
         descriptions.append(category)
 
 #zip iterator for days and descriptions; also converting days into ISO format for ics module
-with open('my.ics', 'w') as f:
+with open('export.ics', 'w') as f:
     c = Calendar()
     e = Event()
     for a,b in zip(dates,descriptions):
