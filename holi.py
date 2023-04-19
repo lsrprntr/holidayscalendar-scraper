@@ -53,5 +53,6 @@ with open('export.ics', 'w') as f:
         c.events
         #write to file
         f.writelines(c)
+        f.writelines("\n")
 
 print("export.ics created")
