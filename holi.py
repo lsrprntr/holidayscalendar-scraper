@@ -14,7 +14,7 @@ else:
     fyear="2023"
     link = 'https://www.holidayscalendar.com/categories/international-2023/'
 
-#html page reuest and read
+#html page request and read
 try:
     page = urllib.request.urlopen(link)
     #print(page.read())
@@ -46,15 +46,15 @@ if os.path.isfile("export.ics"):
 
 #create file export;
 with open('export.ics', 'w') as f:
-    c = Calendar()
+    c = Calendar() #create calendar object
+
     #zip ip iterator for days and descriptions; also converting days into ISO format for ics module
     for a,b in zip(dates,descriptions):
-        
         e = Event()
-        date_time_str = fyear+" "+" ".join(a) #initial string setup before function
+        date_time_str = fyear+" "+" ".join(a) #initial string setup before function translation
         date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
 
-        if len(b)>66:
+        if len(b)>66: #for SUMMARY: description standards might error for 75 characters
             b=b[:66]+b[66:] #75 character warning format to be edited if needed
 
         #building event details
@@ -63,17 +63,9 @@ with open('export.ics', 'w') as f:
         e.end = date_time_obj
         e.make_all_day()
         
-        #e.extra = "help"
-        #adding to calendar 
+        #add event to calendar object
         c.events.add(e)
 
-        #breakpoint = input("Input to continue")
-
-        #write to file
-        #print(e)
-        #f.writelines(e.serialize_iter())
-        #f.writelines("\n")
-    
     #writes calendar to file
     f.writelines(c.serialize_iter())
         
