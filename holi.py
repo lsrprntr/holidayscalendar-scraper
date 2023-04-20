@@ -43,12 +43,14 @@ for i in soup.find_all("tr"):
 if os.path.isfile("export.ics"):
     os.remove("export.ics")
     print("Deleting old file")
-#zip iterator for days and descriptions; also converting days into ISO format for ics module
+
+#create file export;
 with open('export.ics', 'w') as f:
-    c = Calendar()
-    e = Event()
+    #zip ip iterator for days and descriptions; also converting days into ISO format for ics module
     for a,b in zip(dates,descriptions):
-        date_time_str = fyear+" "+" ".join(a)
+        c = Calendar()
+        e = Event()
+        date_time_str = fyear+" "+" ".join(a) #initial string setup before function
         date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
 
         if len(b)>66:
