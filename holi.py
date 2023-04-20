@@ -39,13 +39,15 @@ for i in soup.find_all("tr"):
         descriptions.append(category)
 
 #zip iterator for days and descriptions; also converting days into ISO format for ics module
-with open('export.ics', 'w') as f:
+with open('export3.ics', 'w') as f:
     c = Calendar()
     e = Event()
     for a,b in zip(dates,descriptions):
         date_time_str = fyear+" "+" ".join(a)
         date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
 
+        if len(b)>66:
+            b=b[:66]+"\r\n"+b[66:]
 
         e.name = b
         e.begin = date_time_obj
