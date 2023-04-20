@@ -46,24 +46,36 @@ if os.path.isfile("export.ics"):
 
 #create file export;
 with open('export.ics', 'w') as f:
+    c = Calendar()
     #zip ip iterator for days and descriptions; also converting days into ISO format for ics module
     for a,b in zip(dates,descriptions):
-        c = Calendar()
+        
         e = Event()
         date_time_str = fyear+" "+" ".join(a) #initial string setup before function
         date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
 
         if len(b)>66:
-            b=b[:66]
+            b=b[:66]+b[66:] #75 character warning format to be edited if needed
 
+        #building event details
         e.name = b
         e.begin = date_time_obj
+        e.end = date_time_obj
+        e.make_all_day()
+        
+        #e.extra = "help"
+        #adding to calendar 
         c.events.add(e)
-        c.events
-        print(c)
-        test = input()
+
+        #breakpoint = input("Input to continue")
+
         #write to file
-        f.writelines(c)
-        f.writelines("\n")
+        #print(e)
+        #f.writelines(e.serialize_iter())
+        #f.writelines("\n")
+    
+    #writes calendar to file
+    f.writelines(c.serialize_iter())
+        
 
 print("export.ics created")
