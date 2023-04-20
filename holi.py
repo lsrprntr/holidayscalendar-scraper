@@ -4,6 +4,7 @@ collections.Callable = collections.abc.Callable #fixes bs4 exception
 from bs4 import BeautifulSoup
 import datetime
 from ics import Calendar, Event
+import os
 
 #year string input with default to 2023 if no input
 fyear = str(input("What year?: "))
@@ -38,8 +39,12 @@ for i in soup.find_all("tr"):
         #country = n.find_all("span") #for categories and countries
         descriptions.append(category)
 
+#check if file created if so delete
+if os.path.isfile("export.ics"):
+    os.remove("export.ics")
+    print("Deleting old file")
 #zip iterator for days and descriptions; also converting days into ISO format for ics module
-with open('export3.ics', 'w') as f:
+with open('export.ics', 'w') as f:
     c = Calendar()
     e = Event()
     for a,b in zip(dates,descriptions):
@@ -47,12 +52,14 @@ with open('export3.ics', 'w') as f:
         date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
 
         if len(b)>66:
-            b=b[:66]+"\r\n"+b[66:]
+            b=b[:66]
 
         e.name = b
         e.begin = date_time_obj
         c.events.add(e)
         c.events
+        print(c)
+        test = input()
         #write to file
         f.writelines(c)
         f.writelines("\n")
