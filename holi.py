@@ -7,14 +7,20 @@ from ics import Calendar, Event
 import os
 
 #year string input with default to 2023 if no input
-fyear = str(input("What year?: "))
+today = datetime.date.today()
+year = str(today.year)
+try:
+    fyear = str(input("What year?: "))
+except:
+    print("Error input: Defaulting to 2023")
+    fyear = year
 if fyear:
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 else:
-    fyear="2023"
+    fyear = year
     link = 'https://www.holidayscalendar.com/categories/international-2023/'
 
-#html page request and read
+#html page request and read; exception to local file
 try:
     page = urllib.request.urlopen(link)
     #print(page.read())
@@ -39,13 +45,16 @@ for i in soup.find_all("tr"):
         #country = n.find_all("span") #for categories and countries
         descriptions.append(category)
 
+#File name format;
+filename = f'export{fyear}.ics'
+
 #check if file created if so delete
-if os.path.isfile("export.ics"):
-    os.remove("export.ics")
+if os.path.isfile(filename):
+    os.remove(filename)
     print("Deleting old file")
 
 #create file export;
-with open('export.ics', 'w') as f:
+with open(filename, 'w') as f:
     c = Calendar() #create calendar object
 
     #zip ip iterator for days and descriptions; also converting days into ISO format for ics module
@@ -61,7 +70,9 @@ with open('export.ics', 'w') as f:
         e.name = b
         e.begin = date_time_obj
         e.end = date_time_obj
-        e.make_all_day()
+        e.transparent = "Transparent"
+        e.categories = "Holidays"
+        e.make_all_day
         
         #add event to calendar object
         c.events.add(e)
@@ -70,4 +81,4 @@ with open('export.ics', 'w') as f:
     f.writelines(c.serialize_iter())
         
 
-print("export.ics created")
+print(f"{filename} created")
