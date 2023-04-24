@@ -1,4 +1,4 @@
-# holidayscalendar-scrapper
+# holidayscalendar-scraper
 
 This aims to scrape the below site(s) for the international holiday dates and name to output it into an .ics file.<br>
 https://www.holidayscalendar.com/categories/international/<br>
