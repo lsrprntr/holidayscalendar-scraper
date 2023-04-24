@@ -64,8 +64,8 @@ with open(filename, 'w') as f:
         date_time_str = fyear+" "+" ".join(a) #initial string setup before function translation
         date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
 
-        if len(b)>66: #for SUMMARY: description standards might error for 75 characters
-            b=b[:66]+b[66:] #75 character warning format to be edited if needed
+        #if len(b)>66: #for SUMMARY: description standards might error for 75 characters
+        #    b=b[:66]+b[66:] #75 character warning format to be edited if needed
 
         #building event details
         e.name = b
@@ -81,11 +81,19 @@ with open(filename, 'w') as f:
         
 print(f"{filename} created")
 
+
+
+
+'''
+https://www.timeanddate.com/holidays/fun/
+The site does not have seperate pages for other years and only has one page for the current year.
+'''
+
+
 ##Fun holidays export and parse from timeanddate site
 #File name format;
 filename = f'funexport{fyear}.ics'
 
-##Fun holidays export and parse from timeanddate site
 #html page request and read; exception to local file
 try:
     link = "https://www.timeanddate.com/holidays/fun/"
@@ -105,8 +113,10 @@ for x in soup.find_all("tr"):
         date = x.contents[0].text #%d %mmm        
         if date[0].isnumeric():
             description = x.contents[2].text #holiday name
+
             date_time_str = fyear+" "+date #initial string setup before function translation
             date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %d %b')
+
             dates.append(date_time_obj)
             descriptions.append(description)
 
@@ -114,7 +124,7 @@ for x in soup.find_all("tr"):
 #check if file created if so delete
 if os.path.isfile(filename):
     os.remove(filename)
-    print("Deleting old funexport.ics file")
+    print("Deleting old funexport*.ics file")
 
 #create file export;
 
