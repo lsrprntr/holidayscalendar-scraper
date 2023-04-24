@@ -4,16 +4,23 @@ collections.Callable = collections.abc.Callable #fixes bs4 exception
 from bs4 import BeautifulSoup
 import datetime
 from ics import Calendar, Event
+import os
 
 #year string input with default to 2023 if no input
-fyear = str(input("What year?: "))
+today = datetime.date.today()
+year = str(today.year)
+try:
+    fyear = str(input("What year?: "))
+except:
+    print("Error input: Defaulting to 2023")
+    fyear = year
 if fyear:
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 else:
-    fyear="2023"
+    fyear = year
     link = 'https://www.holidayscalendar.com/categories/international-2023/'
 
-#html page reuest and read
+#html page request and read; exception to local file
 try:
     page = urllib.request.urlopen(link)
     #print(page.read())
@@ -38,20 +45,39 @@ for i in soup.find_all("tr"):
         #country = n.find_all("span") #for categories and countries
         descriptions.append(category)
 
-#zip iterator for days and descriptions; also converting days into ISO format for ics module
-with open('export.ics', 'w') as f:
-    c = Calendar()
-    e = Event()
+#File name format;
+filename = f'export{fyear}.ics'
+
+#check if file created if so delete
+if os.path.isfile(filename):
+    os.remove(filename)
+    print("Deleting old file")
+
+#create file export;
+with open(filename, 'w') as f:
+    c = Calendar() #create calendar object
+
+    #zip ip iterator for days and descriptions; also converting days into ISO format for ics module
     for a,b in zip(dates,descriptions):
-        date_time_str = fyear+" "+" ".join(a)
+        e = Event()
+        date_time_str = fyear+" "+" ".join(a) #initial string setup before function translation
         date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
 
+        if len(b)>66: #for SUMMARY: description standards might error for 75 characters
+            b=b[:66]+b[66:] #75 character warning format to be edited if needed
 
+        #building event details
         e.name = b
         e.begin = date_time_obj
+        e.end = date_time_obj
+        e.transparent = "Transparent"
+        e.make_all_day
+        
+        #add event to calendar object
         c.events.add(e)
-        c.events
-        #write to file
-        f.writelines(c)
 
-print("export.ics created")
+    #writes calendar to file
+    f.writelines(c.serialize_iter())
+        
+
+print(f"{filename} created")
