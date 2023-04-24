@@ -3,7 +3,6 @@
 This aims to scrape the below site(s) for the international holiday dates and name to output it into an .ics file.
 https://www.holidayscalendar.com/categories/international/
 
-
 https://www.timeanddate.com/holidays/fun/
 
 
