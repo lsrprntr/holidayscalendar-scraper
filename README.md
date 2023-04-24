@@ -17,7 +17,7 @@ where * is the year.
 2. When prompted enter a valid year to be parsed.
 3. export*.ics and funexport*.ics files should be exported in the folder where * is the year input.
 
-Otherwise, the current .ics files can be imported. (export2023.ics,funexport2023.ics)
+Otherwise, the current .ics files can be downloaded and imported. (export2023.ics,funexport2023.ics)
 
 
 ### Psuedoflowchart below:
