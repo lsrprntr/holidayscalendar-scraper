@@ -15,14 +15,14 @@ https://www.timeanddate.com/holidays/fun/<br>
 ## Requirements
 Requires Python3,BeautifulSoup4, and ics library.<br>
 <br>
-
 ## How to use
 1. Run holi.py via python.<br>
 2. When prompted enter a valid year to be parsed.<br>
 3. .ics file should be exported in the folder.<br>
-
+<br>
 ## Troubleshooting
-TBA
+TBA<br>
+Year 2020 has an inconsistency in their html source for parsing which returns a type error<br>
 <br>
 
 
