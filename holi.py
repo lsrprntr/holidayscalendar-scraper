@@ -14,14 +14,14 @@ year = str(today.year)
 try:
     fyear = str(input("What year?: "))
 except:
-    print("Error input: Defaulting to 2023")
     fyear = year
+    print(f"Error input: Defaulting to {fyear}")
 
 if fyear:
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 else:
     fyear = year
-    link = 'https://www.holidayscalendar.com/categories/international-2023/'
+    link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 
 #html page request and read; exception to local file
 try:
