@@ -2,8 +2,9 @@
 
 This aims to scrape the below site(s) for the international holiday dates and name to output it into an .ics file.
 
-https://www.holidayscalendar.com/categories/international/<br>
-https://www.timeanddate.com/holidays/fun/
+https://www.holidayscalendar.com/categories/international/ (outputs export*.ics file)<br>
+https://www.timeanddate.com/holidays/fun/ (outputs funexport*.ics file)<br>
+where * is the year.
 
 ## Requirements
 - Python3
