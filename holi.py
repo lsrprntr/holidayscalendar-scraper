@@ -12,16 +12,17 @@ year = str(today.year)
 
 #user input
 try:
-    fyear = str(input("What year?: "))
+    fyear = str(int(input("What year?: ")))
 except:
     fyear = year
     print(f"Error input: Defaulting to {fyear}")
 
-if fyear:
+if 999<int(fyear)<10000: #if blank default to
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 else:
     fyear = year
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
+    print(f"Error input: Defaulting to {fyear}")
 
 #html page request and read; exception to local file
 try:
@@ -52,7 +53,7 @@ filename = f'export{fyear}.ics'
 #check if file created if so delete
 if os.path.isfile(filename):
     os.remove(filename)
-    print("Deleting old file")
+    print(f"Deleting old {filename} file")
 
 #create file export;
 with open(filename, 'w') as f:
@@ -124,7 +125,7 @@ for x in soup.find_all("tr"):
 #check if file created if so delete
 if os.path.isfile(filename):
     os.remove(filename)
-    print("Deleting old funexport*.ics file")
+    print(f"Deleting old {filename} file")
 
 #create file export;
 
