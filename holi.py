@@ -23,9 +23,8 @@ else:
 #html page request and read; exception to local file
 try:
     page = urllib.request.urlopen(link)
-    #print(page.read())
 except:
-    fhand = open("demo.html","r")
+    fhand = open("intdemo.html","r")
     page = fhand.read()
 
 #soup handle, the ladle
@@ -41,9 +40,9 @@ for i in soup.find_all("tr"):
         date = (d.text).split() #date list MMM/DD/DAY
         dates.append(date)
     for n in i.find_all("td",class_="wphc-tbl-name d-flex"):
-        category = n.find("a").text
+        name = n.find("a").contents[0] #day description; year 2020 has html error in source
         #country = n.find_all("span") #for categories and countries
-        descriptions.append(category)
+        descriptions.append(name)
 
 #File name format;
 filename = f'export{fyear}.ics'
