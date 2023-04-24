@@ -71,7 +71,6 @@ with open(filename, 'w') as f:
         e.begin = date_time_obj
         e.end = date_time_obj
         e.transparent = "Transparent"
-        e.categories = "Holidays"
         e.make_all_day
         
         #add event to calendar object
