@@ -20,6 +20,7 @@ where * is the year.
 Otherwise, the current .ics files can be downloaded and imported. (export2023.ics,funexport2023.ics)
 
 
+
 ### Psuedoflowchart below:
 
 1. Ask for year input.
@@ -30,7 +31,8 @@ Otherwise, the current .ics files can be downloaded and imported. (export2023.ic
 
 
 ## Troubleshooting/Issues
-- 2020 year has an inconsistency in their html source for parsing which returns a type error
+- Not working for Windows devices. 
+- 2020 year has an inconsistency in their html source for parsing which returns a type error.
 - TBA
 
 
