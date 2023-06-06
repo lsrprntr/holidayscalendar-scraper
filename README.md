@@ -7,9 +7,9 @@ https://www.timeanddate.com/holidays/fun/ (outputs funexport*.ics file)<br>
 where * is the year.
 
 ## Requirements
-- Python3
-- BeautifulSoup4
-- ics
+- Python3 [Link to install](https://wiki.python.org/moin/BeginnersGuide/Download)
+- BeautifulSoup4 [Link to install](https://www.crummy.com/software/BeautifulSoup/bs4/doc/#installing-beautiful-soup)
+- ics [Link to install](https://icspy.readthedocs.io/en/stable/)
 
 
 ## How to use
@@ -20,19 +20,21 @@ where * is the year.
 Otherwise, the current .ics files can be downloaded and imported. (export2023.ics,funexport2023.ics)
 
 
+
 ### Psuedoflowchart below:
 
-1. Ask for year input.
-2. Connect to site.
-3. Parses the table using BeautifulSoup4.
-4. Convert data into formats for ics module.
-5. Output an export*.ics file where * is the year inputted.
-
+```mermaid
+graph TD;
+    A[Ask for year input] --> B(Connect to website);
+    B-->C(Parses website with BeautifulSoup);
+    C-->D(Convert data into formats for ics module);
+    D-->E(Output an export*.ics file where * is the year inputted);
+```
 
 ## Troubleshooting/Issues
-- 2020 year has an inconsistency in their html source for parsing which returns a type error
+- Not working for Windows devices. 
+- 2020 year has an inconsistency in their html source for parsing which returns a type error.
 - TBA
-
 
 
 
