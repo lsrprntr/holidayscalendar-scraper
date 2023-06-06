@@ -6,7 +6,11 @@ import datetime
 from ics import Calendar, Event
 import os
 
-#year string input with default to 2023 if no input
+'''
+// This script parses a list of holidays online and outputs a calendar file in the same folder.
+'''
+
+#year string input with default to current year if no input
 today = datetime.date.today()
 year = str(today.year)
 
