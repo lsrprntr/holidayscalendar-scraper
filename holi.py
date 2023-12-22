@@ -10,38 +10,38 @@ import os
 // This script parses a list of holidays online and outputs a calendar file in the same folder.
 '''
 
-#year string input with default to current year if no input
+# Gets current year as default string input if no input given
 today = datetime.date.today()
 year = str(today.year)
 
-#user input
+# Gets user input
 try:
     fyear = str(int(input("What year?: ")))
 except:
     fyear = year
     print(f"Error input: Defaulting to {fyear}")
 
-if 999<int(fyear)<10000: #if blank default to
+if 999<int(fyear)<10000: #if blank use default year
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 else:
     fyear = year
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
     print(f"Error input: Defaulting to {fyear}")
 
-#html page request and read; exception to local file
+# HTML page request and read; exception to local file
 try:
     page = urllib.request.urlopen(link)
 except:
     fhand = open("intdemo.html","r")
     page = fhand.read()
 
-#soup handle, the ladle
+# soup handle, the ladle
 soup = BeautifulSoup(page,'html.parser')
 
 dates = list()
 descriptions = list()
 
-#finding the table and appending to list
+# finding the table and appending to list
 for i in soup.find_all("tr"):
     for d in i.find_all("td",class_="wphc-tbl-date"):
         date = (d.text).split() #date list MMM/DD/DAY
@@ -51,37 +51,37 @@ for i in soup.find_all("tr"):
         #country = n.find_all("span") #for categories and countries
         descriptions.append(name)
 
-#File name format;
+# File name format;
 filename = f'export{fyear}.ics'
 
-#check if file created if so delete
+# Check if file created if so delete
 if os.path.isfile(filename):
     os.remove(filename)
     print(f"Deleting old {filename} file")
 
-#create file export;
+# Create file export;
 with open(filename, 'w') as f:
     c = Calendar() #create calendar object
 
-    #zip ip iterator for days and descriptions; also converting days into ISO format for ics module
+    # zip ip iterator for days and descriptions; also converting days into ISO format for ics module
     for a,b in zip(dates,descriptions):
         e = Event()
         date_time_str = fyear+" "+" ".join(a) #initial string setup before function translation
         date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
 
-        #if len(b)>66: #for SUMMARY: description standards might error for 75 characters
+        #if len(b)>66: # For SUMMARY: description standards might error for 75 characters
         #    b=b[:66]+b[66:] #75 character warning format to be edited if needed
 
-        #building event details
+        # Building event details
         e.name = b
         e.begin = date_time_obj
         e.make_all_day()
         e.transparent = "Transparent"
         
-        #add event to calendar object
+        # Add event to calendar object
         c.events.add(e)
 
-    #writes calendar to file
+    # Writes calendar to file
     f.writelines(c.serialize_iter())
         
 print(f"{filename} created")
