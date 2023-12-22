@@ -1,6 +1,6 @@
 # holidayscalendar-scraper
 
-This aims to scrape the below site(s) for the international holiday dates and name to output it into an .ics file.
+This aims to scrape the below site(s) for the international holiday and fun holidays to output it into an .ics file.
 
 https://www.holidayscalendar.com/categories/international/ (outputs export*.ics file)<br>
 https://www.timeanddate.com/holidays/fun/ (outputs funexport*.ics file)<br>
@@ -13,12 +13,14 @@ where * is the year.
 
 
 ## How to use
-1. Run holi.py via python.
-2. When prompted enter a valid year to be parsed.
-3. export*.ics and funexport*.ics files should be exported in the folder where * is the year input.
+1. Install above requirements
+2. Run holi.py via python.
+3. When prompted enter a valid year to be parsed.
+4. export*.ics and funexport*.ics files should be exported in the folder where * is the year input.
 
-Otherwise, the current .ics files can be downloaded and imported. (export2023.ics,funexport2023.ics)
+Otherwise, the current .ics files can be downloaded and imported. (export*.ics,funexport*.ics) where * is the year.
 
+![image](https://github.com/lsrprntr/holidayscalendar-scraper/assets/39038103/6c5d4b0d-f42c-4b17-b64a-de6c3a45674c)
 
 
 ### Psuedoflowchart below:
