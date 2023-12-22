@@ -35,8 +35,8 @@ graph TD;
 
 ## Troubleshooting/Issues
 - Not working for Windows devices. 
-- 2020 year has an inconsistency in their html source for parsing which returns a type error.
-- TBA
+- ~~2020 year has an inconsistency in their html source for parsing which returns a type error.~~
+- Default value will error when new year rolls over until I fix the demo.html
 
 
 
