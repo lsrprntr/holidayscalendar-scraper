@@ -17,16 +17,17 @@ year = str(today.year)
 # Gets user input
 try:
     fyear = str(int(input("What year?: ")))
+    print(f"Parsing for {fyear} year")
 except:
     fyear = year
-    print(f"Error input: Defaulting to {fyear}")
+    print(f"Error year input: Defaulting to {fyear}")
 
 if 999<int(fyear)<10000: #if blank use default year
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
 else:
     fyear = year
     link = "https://www.holidayscalendar.com/categories/international-"+fyear+"/"
-    print(f"Error input: Defaulting to {fyear}")
+    print(f"Error blank input: Defaulting to {fyear}")
 
 # HTML page request and read; exception to local file
 try:
@@ -47,10 +48,10 @@ for i in soup.find_all("tr"):
         date = (d.text).split() #date list MMM/DD/DAY
         dates.append(date)
     for n in i.find_all("td",class_="wphc-tbl-name d-flex"):
-        name = n.find("a").contents[0] #day description; year 2020 has html error in source
+        name = n.find("a").contents[0] #day description
         #country = n.find_all("span") #for categories and countries
         descriptions.append(name)
-
+        
 # File name format;
 filename = f'export{fyear}.ics'
 
@@ -67,7 +68,11 @@ with open(filename, 'w') as f:
     for a,b in zip(dates,descriptions):
         e = Event()
         date_time_str = fyear+" "+" ".join(a) #initial string setup before function translation
-        date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %b %d %A')
+        try: 
+            date_time_obj = datetime.datetime.strptime(date_time_str, '%Y %A, %b %d')
+        except:
+            print(date_time_str, b, "skipped due to exception")
+            continue
 
         #if len(b)>66: # For SUMMARY: description standards might error for 75 characters
         #    b=b[:66]+b[66:] #75 character warning format to be edited if needed
