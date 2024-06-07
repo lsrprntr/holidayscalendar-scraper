@@ -23,16 +23,6 @@ Otherwise, the current .ics files can be downloaded and imported. (export*.ics,f
 ![image](https://github.com/lsrprntr/holidayscalendar-scraper/assets/39038103/6c5d4b0d-f42c-4b17-b64a-de6c3a45674c)
 
 
-### Psuedoflowchart below:
-
-```mermaid
-graph TD;
-    A[Ask for year input] --> B(Connect to website);
-    B-->C(Parses website with BeautifulSoup);
-    C-->D(Convert data into formats for ics module);
-    D-->E(Output an export*.ics file where * is the year inputted);
-```
-
 ## Troubleshooting/Issues
 - ~~Not working for Windows devices.~~ fixed
 - ~~2020 year has an inconsistency in their html source for parsing which returns a type error.~~ fixed
